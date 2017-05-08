@@ -1,0 +1,17 @@
+---
+# defaults file for hdp-security
+krb_realm: CONDLA.COM
+kdc_hostnames:
+  - ad01.condla.com
+  - ad02.condla.com
+kdc_admin_hostnames:
+  - ad01.condla.com
+  - ad02.condla.com
+krb_domain: condla.com
+domain_ou: "OU=HadoopNodes,DC=condla,DC=com"
+login_ccache: "/tmp/krb5cc_0"
+sssd_user: registersssd
+sssd_user_password: please_define_this_encrypted
+
+
+

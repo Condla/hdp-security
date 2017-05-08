@@ -1,0 +1,56 @@
+---
+# tasks file for hdp-security
+
+- block:
+  - name: install required security packages
+    yum: name={{ item }} state=installed
+    with_items:
+      - krb5-workstation
+      - krb5-libs
+      - sssd
+      - oddjob-mkhomedir
+      - authconfig
+      - sssd-krb5
+      - sssd-ad
+      - sssd-tools
+      - adcli
+      - ntpdate
+      - openssh-clients
+      - openldap-clients
+
+- name: deploy krb.conf
+  template: src=templates/krb5.conf.j2 dest=/etc/krb5.conf
+  
+- name: deploy sssd.conf
+  template: src=templates/sssd.conf.j2 dest=/etc/sssd/sssd.conf mode='0600'
+
+- name: authenticate as sssd user
+  shell: echo ""{{ sssd_user_password }}"" | kinit "{{ sssd_user }}"@"{{ krb_realm }}"
+
+- name: join host to active directory
+  shell: adcli join -v \
+         --domain-controller="{{ kdc_hostnames[0] }}" \
+         --domain-ou=""{{ domain_ou }}"" \
+         --login-ccache=""{{ login_ccache }}"" \
+         --login-user=""{{ sssd_user}}"@"{{ krb_realm }}"" \
+         -v --show-details
+
+- name: destroy ticket cache
+  shell: kdestroy
+
+- name: start and enable sssd service
+  systemd: name=sssd enabled=yes
+- systemd: name=sssd state=started
+
+- name: setup sssd
+  shell: authconfig --enablesssd --enablesssdauth --enablemkhomedir --enablelocauthorize --update
+ 
+- name: start and enable oddjob daemon
+  systemd: name=oddjobd enabled=yes
+- systemd: name=oddjobd state=started
+
+- name: restart sssd service
+  systemd: name=sssd state=restarted
+
+- name: test if setup is working
+  command: id {{ ad_test_user }}

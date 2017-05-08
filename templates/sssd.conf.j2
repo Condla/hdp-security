@@ -1,0 +1,35 @@
+[sssd]
+#debug_level = 9
+## master & data nodes only require nss. Edge nodes require pam.
+services = nss, pam, ssh, autofs, pac
+config_file_version = 2
+domains = {{ krb_realm }}
+override_space = _
+ 
+[domain/{{ krb_realm }}]
+#debug_level = 9
+id_provider = ad
+ad_server = {% for host in kdc_admin_hostnames %}{{ host }}{%- if loop.first%},{%endif %}
+{% endfor %}
+#ad_server = ad01, ad02, ad03
+#ad_backup_server = ad-backup01, 02, 03
+auth_provider = ad
+chpass_provider = ad
+access_provider = ad
+enumerate = False
+krb5_realm = {{ krb_realm }}
+ldap_schema = ad
+ldap_id_mapping = True
+cache_credentials = True
+ldap_access_order = expire
+ldap_account_expire_policy = ad
+ldap_force_upper_case_realm = true
+fallback_homedir = /home/%d/%u
+default_shell = /bin/false
+ldap_referrals = false
+ignore_group_members = true
+ 
+[nss]
+debug_level = 9
+memcache_timeout = 3600
+override_shell = /bin/bash
