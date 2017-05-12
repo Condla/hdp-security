@@ -17,6 +17,7 @@
       - ntpdate
       - openssh-clients
       - openldap-clients
+      - ca-certificates
 
 - name: deploy krb.conf
   template: src=templates/krb5.conf.j2 dest=/etc/krb5.conf
